@@ -1,0 +1,55 @@
+# Panel configuration
+panel_url: "http://localhost:8080"
+token: "your-detector-token-here"
+name: "detector-1"
+include_private_ips: false  # Whether to include private IP scans, default is false
+heartbeat_interval: 10      # Heartbeat interval in seconds, default is 10s
+
+# Placeholders for regex patterns
+placeholders:
+  ip_regex: '((?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)|(?:[0-9A-Fa-f]{0,4}:){2,7}[0-9A-Fa-f]{0,4})'
+  ipv4_regex: '((?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))'
+  ipv6_regex: '((?:[0-9A-Fa-f]{0,4}:){2,7}[0-9A-Fa-f]{0,4})'
+  http_method_regex: '(GET|POST|PUT|DELETE|HEAD|OPTIONS|PATCH|TRACE|CONNECT)'
+
+# Log monitoring configurations
+logs:
+  # SSH brute force detection
+  - description: "SSH brute force detection"
+    path: "/var/log/auth.log"
+    regex: 'Failed password for .+ from {{ ip_regex }}'
+    max_retry: 5
+    time_window: 10       # minutes
+    scan_interval: 1000   # milliseconds
+
+  # Nginx vulnerability scanning detection
+  - description: "Nginx vulnerability scanning detection"
+    path: "/var/log/nginx/access.log"
+    regex: '{{ ip_regex }} .+ "{{ http_method_regex }} \/\.?(?:env|git|admin|wp-admin|phpmyadmin)'
+    max_retry: 3
+    time_window: 5        # minutes
+    scan_interval: 1000   # milliseconds
+
+  # Apache access log monitoring
+  - description: "Apache vulnerability scanning detection"
+    path: "/var/log/apache2/access.log"
+    regex: '{{ ip_regex }} .+ "{{ http_method_regex }} (/\.htaccess|/\.htpasswd|/config\.php)'
+    max_retry: 2
+    time_window: 5        # minutes
+    scan_interval: 1000   # milliseconds
+
+  # FTP brute force detection
+  - description: "FTP brute force detection"
+    path: "/var/log/vsftpd.log"
+    regex: 'FAIL LOGIN: Client "{{ ip_regex }}"'
+    max_retry: 3
+    time_window: 5        # minutes
+    scan_interval: 1000   # milliseconds
+
+  # Nextcloud brute force detection
+  - description: "Nextcloud brute force detection"
+    path: "/var/www/html/nextclouddata/nextcloud.log"
+    regex: '"remoteAddr":"{{ ip_regex }}".*Bruteforce attempt from'
+    max_retry: 1
+    time_window: 5        # minutes
+    scan_interval: 1000   # milliseconds

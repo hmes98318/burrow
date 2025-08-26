@@ -1,0 +1,10 @@
+# Panel configuration (for development)
+port: 8080
+database: "./panel.db"
+heartbeat_timeout: 60   # Heartbeat timeout in seconds
+block_cidr24: false     # Whether to convert IPs to /24 CIDR blocks for export, default false
+
+# Web dashboard settings
+web:
+  enabled: true
+  static_files: "./web/dist"

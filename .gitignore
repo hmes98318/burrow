@@ -1,0 +1,7 @@
+bin/
+test_logs/
+
+*.log
+*.db
+./detector.yaml
+./panel.yaml
