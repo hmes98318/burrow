@@ -482,3 +482,8 @@ Other Linux distributions should work but may require additional testing.
 ### Dependencies
 - Go 1.24+ (for building)
 - SQLite3 (embedded, no separate installation required)
+
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
