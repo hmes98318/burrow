@@ -48,8 +48,7 @@ A comprehensive malicious IP threat intelligence system that monitors log files 
 - **Real-time Log Monitoring**: Continuously monitors multiple log files
 - **Advanced Pattern Matching**: Uses configurable regex patterns with placeholder support
 - **Multi-service Support**: SSH, Nginx, Apache, FTP, Nextcloud, and more
-- **Intelligent Rate Limiting**: Configurable retry thresholds and time windows
-- **Performance Optimized**: Efficient regex patterns with benchmark testing
+- **Performance Optimized**: Efficient regex detection
 - **Centralized Reporting**: Automatically reports threats to Panel server
 
 ### 🎛️ **Panel (Central Management Platform)**
@@ -80,7 +79,7 @@ A comprehensive malicious IP threat intelligence system that monitors log files 
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/yourusername/malicious-detector.git
+git clone https://github.com/hmes98318/malicious-detector.git
 cd malicious-detector
 ```
 
