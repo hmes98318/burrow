@@ -371,7 +371,7 @@ func (lm *LogMonitor) processLogLine(line string, lineNumber int64) {
 	}
 
 	if ip == "" {
-		log.Printf("⚠️  WARNING: No IP address found in log (file: %s) line %d: %s", lm.config.Path, lineNumber, line)
+		// log.Printf("⚠️  WARNING: No IP address found in log (file: %s) line %d: %s", lm.config.Path, lineNumber, line)
 		// Silent skip - no IP found in this line (this is normal for non-matching lines)
 		return
 	}
