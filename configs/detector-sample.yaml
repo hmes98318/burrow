@@ -5,14 +5,48 @@ name: "detector-1"
 include_private_ips: false  # Whether to include private IP scans, default is false
 heartbeat_interval: 10      # Heartbeat interval in seconds, default is 10s
 
-# Placeholders for regex patterns
+# Placeholder for regex patterns:
+# 1. Placeholders can reference other placeholders up to 10 levels deep
+# 2. Prevents infinite loops (A -> B -> A scenarios)
+# 3. Validates all placeholder dependencies at startup
+# 4. Syntax: {{ placeholder_name }} (case-sensitive)
+#
+# Examples of valid nested patterns:
+# - {{ pattern1 }} -> contains {{ pattern2 }} -> contains {{ pattern3 }}
+# - Multi-reference: {{ combined }} -> uses {{ pattern1 }} and {{ pattern2 }}
+# - Complex combinations: Build sophisticated regex patterns from simple components
+#
+# Best Practices:
+# - Use descriptive placeholder names (vuln_scan_paths vs pattern1)
+# - Group related patterns logically (all HTTP patterns together)
+# - Test complex nested patterns in development environment
+# - Keep nesting levels reasonable (3-4 levels max for readability)
+# - Document complex placeholder relationships in comments
 placeholders:
-  ip_regex: '((?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)|(?:[0-9A-Fa-f]{0,4}:){2,7}[0-9A-Fa-f]{0,4})'
-  ipv4_regex: '((?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))'
-  ipv6_regex: '((?:[0-9A-Fa-f]{0,4}:){2,7}[0-9A-Fa-f]{0,4})'
+  # Basic IP patterns
+  ip_regex: ((?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)|(?:[0-9A-Fa-f]{0,4}:){2,7}[0-9A-Fa-f]{0,4})
+  ipv4_regex: ((?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))
+  ipv6_regex: ((?:[0-9A-Fa-f]{0,4}:){2,7}[0-9A-Fa-f]{0,4})
+
+  # HTTP patterns
   http_method_regex: '(GET|POST|PUT|DELETE|HEAD|OPTIONS|PATCH|TRACE|CONNECT)'
 
+  # Security threat patterns (demonstrating nested placeholders)
+  vuln_scan_paths: \/\.?(?:env|git|htaccess|htpasswd)
+  shell_injection_patterns: (?:nslookup|curl|echo|wget|ping|nc|netcat|telnet|ssh)(?:\s|\$|%20|\+)
+  shell_injection_in_url: (?:\$\(|\${|\|\||&&|`|\\x[0-9a-fA-F]{2}|\'\+\'|if\(|\.chr\()
+  sql_injection_patterns: (?:SELECT|INSERT|DROP|DELETE)\s|(?:XOR|AND|OR|NOT)
+  script_injection_patterns: (?i)<\s*script\b[^>]*>
+  path_traversal_patterns: (etc\/{1,4}passwd|\/http:\/\/|\/https:\/\/|\$\{|\.{2,4}\/)
+
+  # Nested placeholders - combining multiple threat patterns
+  web_attack_patterns: '(?:{{ vuln_scan_paths }}|{{ shell_injection_patterns }}|{{ sql_injection_patterns }}|{{ script_injection_patterns }}|{{ path_traversal_patterns }})'
+  enhanced_security_regex: '{{ ip_regex }} .+ "{{ http_method_regex }} .*{{ web_attack_patterns }}'
+
+
 # Log monitoring configurations
+# Each log configuration can use placeholders in regex patterns
+# Placeholders are processed recursively with full nesting support
 logs:
   # SSH brute force detection
   - description: "SSH brute force detection"
@@ -22,18 +56,26 @@ logs:
     time_window: 10       # minutes
     scan_interval: 1000   # milliseconds
 
-  # Nginx vulnerability scanning detection
-  - description: "Nginx vulnerability scanning detection"
+  # Nginx security threat detection
+  - description: "Nginx security threat detection"
     path: "/var/log/nginx/access.log"
-    regex: '{{ ip_regex }} .+ "{{ http_method_regex }} \/\.?(?:env|git|admin|wp-admin|phpmyadmin)'
+    regex: '{{ ip_regex }} .+ "{{ http_method_regex }} {{ vuln_scan_paths }}'
     max_retry: 3
     time_window: 5        # minutes
     scan_interval: 1000   # milliseconds
 
+  # Nginx enhanced security threat detection
+  - description: "Nginx enhanced security threat detection"
+    path: "/var/log/nginx/access.log"
+    regex: '{{ enhanced_security_regex }}'
+    max_retry: 1
+    time_window: 5        # minutes
+    scan_interval: 2000   # milliseconds
+
   # Apache access log monitoring
-  - description: "Apache vulnerability scanning detection"
+  - description: "Apache security threat detection"
     path: "/var/log/apache2/access.log"
-    regex: '{{ ip_regex }} .+ "{{ http_method_regex }} (/\.htaccess|/\.htpasswd|/config\.php)'
+    regex: '{{ ip_regex }} .+ "{{ http_method_regex }} {{ vuln_scan_paths }}'
     max_retry: 2
     time_window: 5        # minutes
     scan_interval: 1000   # milliseconds

