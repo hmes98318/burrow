@@ -430,7 +430,7 @@ func (lm *LogMonitor) processLogLine(line string, lineNumber int64) {
 	// 之後的掃描使用配置的 MaxRetry 值
 	threshold := lm.config.MaxRetry
 	if lm.isFirstScan {
-		threshold = 1
+		// threshold = 1
 		// 檢查此 IP 是否已在第一次掃描中報告過
 		if lm.firstScanReported[ip] {
 			// 已經報告過，跳過此次報告
