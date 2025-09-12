@@ -336,9 +336,11 @@ server {
 ```
 
 #### Method 2: Automated Download and Include
+Create update script: `/etc/nginx/scripts/update-malicious-ips.sh`  
 ```bash
-# Create update script: /etc/nginx/scripts/update-malicious-ips.sh
 #!/bin/bash
+export PATH=/sbin:/usr/sbin:/usr/bin:/bin
+
 NGINX_CONF_DIR="/etc/nginx/conf.d"
 PANEL_URL="http://your-panel-server:8080"
 TARGET_FILE="${NGINX_CONF_DIR}/list/malicious-ips.list"
