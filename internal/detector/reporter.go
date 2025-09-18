@@ -41,13 +41,14 @@ func (r *Reporter) Stop() {
 	close(r.quit)
 }
 
-func (r *Reporter) ReportMaliciousIP(ip, reason, logPath string, count int) {
+func (r *Reporter) ReportMaliciousIP(ip, reason, logPath string, count, banTime int) {
 	report := &shared.ReportRequest{
-		DetectorID: r.token,
-		IP:         ip,
-		Reason:     reason,
-		LogPath:    logPath,
-		Count:      count,
+		Token:   r.token,
+		IP:      ip,
+		Reason:  reason,
+		LogPath: logPath,
+		Count:   count,
+		BanTime: banTime,
 	}
 
 	select {

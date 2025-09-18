@@ -6,7 +6,7 @@ import (
 
 // DetectorConfig represents detector configuration
 type DetectorConfig struct {
-	ID       string    `json:"id" db:"id"`
+	ID       int       `json:"id" db:"id"`
 	Name     string    `json:"name" db:"name"`
 	Token    string    `json:"token" db:"token"`
 	Created  time.Time `json:"created" db:"created"`
@@ -24,8 +24,9 @@ type MaliciousIP struct {
 	Weight     int       `json:"weight" db:"weight"`           // priority weight for sorting
 	FirstSeen  time.Time `json:"first_seen" db:"first_seen"`
 	LastSeen   time.Time `json:"last_seen" db:"last_seen"`
-	Count      int       `json:"count" db:"count"`   // how many times reported
-	Reason     string    `json:"reason" db:"reason"` // description of why it's malicious
+	Count      int       `json:"count" db:"count"`       // how many times reported
+	Reason     string    `json:"reason" db:"reason"`     // description of why it's malicious
+	BanTime    int       `json:"ban_time" db:"ban_time"` // minutes, 0 = permanent ban, >0 = temporary ban
 	Active     bool      `json:"active" db:"active"`
 }
 
@@ -48,6 +49,7 @@ type LogConfig struct {
 	MaxRetry     int    `yaml:"max_retry" json:"max_retry"`
 	TimeWindow   int    `yaml:"time_window" json:"time_window"`     // minutes
 	ScanInterval int    `yaml:"scan_interval" json:"scan_interval"` // milliseconds, default 1000ms
+	BanTime      int    `yaml:"ban_time" json:"ban_time"`           // minutes, 0 = permanent ban, >0 = temporary ban
 	Description  string `yaml:"description" json:"description"`
 }
 
@@ -72,17 +74,18 @@ type PanelSettings struct {
 
 // ReportRequest represents a request from detector to panel
 type ReportRequest struct {
-	DetectorID string `json:"detector_id"`
-	IP         string `json:"ip"`
-	Reason     string `json:"reason"`
-	LogPath    string `json:"log_path"`
-	Count      int    `json:"count"`
+	Token   string `json:"token"` // Detector authentication token
+	IP      string `json:"ip"`
+	Reason  string `json:"reason"`
+	LogPath string `json:"log_path"`
+	Count   int    `json:"count"`
+	BanTime int    `json:"ban_time"` // minutes, 0 = permanent ban, >0 = temporary ban
 }
 
 // HeartbeatRequest represents a heartbeat request from detector to panel
 type HeartbeatRequest struct {
-	DetectorID string `json:"detector_id"`
-	Timestamp  int64  `json:"timestamp"`
+	Token     string `json:"token"` // Detector authentication token
+	Timestamp int64  `json:"timestamp"`
 }
 
 // FirewallFormat represents different firewall export formats

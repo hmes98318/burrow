@@ -47,6 +47,10 @@ placeholders:
 # Log monitoring configurations
 # Each log configuration can use placeholders in regex patterns
 # Placeholders are processed recursively with full nesting support
+# 
+# ban_time settings:
+# - ban_time = 0: Permanent ban (never expires)
+# - ban_time > 0: Ban duration in minutes
 logs:
   # SSH brute force detection
   - description: "SSH brute force detection"
@@ -55,6 +59,7 @@ logs:
     max_retry: 5
     time_window: 10       # minutes
     scan_interval: 1000   # milliseconds
+    ban_time: 1440        # minutes (24 hours)
 
   # Nginx security threat detection
   - description: "Nginx security threat detection"
@@ -63,6 +68,7 @@ logs:
     max_retry: 3
     time_window: 5        # minutes
     scan_interval: 1000   # milliseconds
+    ban_time: 720         # minutes (12 hours)
 
   # Nginx enhanced security threat detection
   - description: "Nginx enhanced security threat detection"
@@ -71,6 +77,7 @@ logs:
     max_retry: 1
     time_window: 5        # minutes
     scan_interval: 2000   # milliseconds
+    ban_time: 2880        # minutes (48 hours)
 
   # Apache access log monitoring
   - description: "Apache security threat detection"
@@ -79,6 +86,7 @@ logs:
     max_retry: 2
     time_window: 5        # minutes
     scan_interval: 1000   # milliseconds
+    ban_time: 720         # minutes (12 hours)
 
   # FTP brute force detection
   - description: "FTP brute force detection"
@@ -87,6 +95,7 @@ logs:
     max_retry: 3
     time_window: 5        # minutes
     scan_interval: 1000   # milliseconds
+    ban_time: 360         # minutes (6 hours)
 
   # Nextcloud brute force detection
   - description: "Nextcloud brute force detection"
@@ -95,3 +104,4 @@ logs:
     max_retry: 1
     time_window: 5        # minutes
     scan_interval: 1000   # milliseconds
+    ban_time: 480         # minutes (8 hours)

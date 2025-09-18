@@ -12,7 +12,6 @@ import (
 	"malicious-detector/internal/shared"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 )
 
 type APIServer struct {
@@ -130,7 +129,6 @@ func (s *APIServer) createDetector(c *gin.Context) {
 	}
 
 	detector := &shared.DetectorConfig{
-		ID:       uuid.New().String(),
 		Name:     req.Name,
 		Token:    token,
 		Created:  time.Now(),
@@ -159,7 +157,12 @@ func (s *APIServer) getDetectors(c *gin.Context) {
 }
 
 func (s *APIServer) getDetector(c *gin.Context) {
-	id := c.Param("id")
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid detector ID"})
+		return
+	}
 
 	detector, err := s.db.GetDetector(id)
 	if err != nil {
@@ -171,7 +174,12 @@ func (s *APIServer) getDetector(c *gin.Context) {
 }
 
 func (s *APIServer) deleteDetector(c *gin.Context) {
-	id := c.Param("id")
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid detector ID"})
+		return
+	}
 
 	if err := s.db.DeleteDetector(id); err != nil {
 		log.Printf("Failed to delete detector: %v", err)
@@ -192,7 +200,7 @@ func (s *APIServer) reportMaliciousIP(c *gin.Context) {
 	}
 
 	// Verify detector token
-	detector, err := s.db.GetDetectorByToken(req.DetectorID)
+	detector, err := s.db.GetDetectorByToken(req.Token)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid detector token"})
 		return
@@ -214,13 +222,14 @@ func (s *APIServer) reportMaliciousIP(c *gin.Context) {
 	now := time.Now()
 	maliciousIP := &shared.MaliciousIP{
 		IP:         req.IP,
-		Source:     detector.ID,
+		Source:     fmt.Sprintf("%d", detector.ID), // Convert detector ID to string
 		SourceType: "detector",
 		Weight:     10, // High weight for detector reports
 		FirstSeen:  now,
 		LastSeen:   now,
 		Count:      req.Count,
 		Reason:     req.Reason,
+		BanTime:    req.BanTime, // Use ban time from request
 		Active:     true,
 	}
 
@@ -244,7 +253,7 @@ func (s *APIServer) handleHeartbeat(c *gin.Context) {
 	}
 
 	// Verify detector token
-	detector, err := s.db.GetDetectorByToken(req.DetectorID)
+	detector, err := s.db.GetDetectorByToken(req.Token)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid detector token"})
 		return
@@ -258,7 +267,7 @@ func (s *APIServer) handleHeartbeat(c *gin.Context) {
 		return
 	}
 
-	log.Printf("Heartbeat received from detector %s (%s) at %s", detector.Name, detector.ID, clientIP)
+	log.Printf("Heartbeat received from detector %s (%d) at %s", detector.Name, detector.ID, clientIP)
 	c.JSON(http.StatusOK, gin.H{"message": "Heartbeat received", "timestamp": time.Now().Unix()})
 }
 
@@ -721,6 +730,9 @@ func (s *APIServer) Start() error {
 	// Start heartbeat monitor
 	go s.startHeartbeatMonitor()
 
+	// Start IP expiration monitor
+	go s.startIPExpirationMonitor()
+
 	return s.router.Run(fmt.Sprintf(":%d", s.port))
 }
 
@@ -744,7 +756,7 @@ func (s *APIServer) startHeartbeatMonitor() {
 				if err := s.db.UpdateDetectorStatus(detector.ID, "offline", detector.IP); err != nil {
 					log.Printf("Failed to update detector %s status to offline: %v", detector.Name, err)
 				} else {
-					log.Printf("Detector %s (%s) marked as offline due to heartbeat timeout", detector.Name, detector.ID)
+					log.Printf("Detector %s (%d) marked as offline due to heartbeat timeout", detector.Name, detector.ID)
 				}
 			}
 		}
@@ -772,4 +784,16 @@ func getClientIP(c *gin.Context) string {
 	}
 
 	return ip
+}
+
+// Checks for expired malicious IPs and deactivates them
+func (s *APIServer) startIPExpirationMonitor() {
+	ticker := time.NewTicker(5 * time.Minute) // Check every 5 minutes
+	defer ticker.Stop()
+
+	for range ticker.C {
+		if err := s.db.ExpireOldMaliciousIPs(); err != nil {
+			log.Printf("Failed to expire old malicious IPs: %v", err)
+		}
+	}
 }

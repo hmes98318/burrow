@@ -63,8 +63,8 @@ func (h *HeartbeatService) Stop() {
 
 func (h *HeartbeatService) sendHeartbeat() {
 	heartbeat := shared.HeartbeatRequest{
-		DetectorID: h.token,
-		Timestamp:  time.Now().Unix(),
+		Token:     h.token,
+		Timestamp: time.Now().Unix(),
 	}
 
 	data, err := json.Marshal(heartbeat)

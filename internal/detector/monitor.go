@@ -453,7 +453,7 @@ func (lm *LogMonitor) processLogLine(line string, lineNumber int64) {
 				lm.config.MaxRetry, lm.config.TimeWindow, lm.config.Description)
 		}
 
-		lm.reporter.ReportMaliciousIP(ip, reason, lm.config.Path, record.Count)
+		lm.reporter.ReportMaliciousIP(ip, reason, lm.config.Path, record.Count, lm.config.BanTime)
 
 		// Reset the record to avoid duplicate reports
 		delete(lm.ipTracker.records, ip)
