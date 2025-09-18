@@ -1,13 +1,18 @@
-# malicious-detector
+# burrow
 
-<img width="150" height="150" align="right" style="float: right; margin: 0 10px 0 0;" alt="malicious-detector-logo" src="public/img/logo.svg">
+<img width="150" height="150" align="right" style="float: right; margin: 0 10px 0 0;" alt="burrow-logo" src="public/img/logo.png">
 
 
 [![Go Version](https://img.shields.io/badge/go-1.24+-blue.svg?style=for-the-badge)](https://golang.org/dl/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg?style=for-the-badge)](LICENSE)
 
-A comprehensive malicious IP threat intelligence system that monitors log files for suspicious activities and maintains a centralized threat intelligence database. The system consists of two main components: **Detector** (log monitoring agents) and **Panel** (central management platform).
+**Burrow** is a comprehensive malicious IP threat intelligence system that monitors log files for suspicious activities and maintains a centralized threat intelligence database.  
 
+The system consists of two main components: 
+ - **Detector**: Log monitoring agents deployed on multiple servers that dig through logs to identify anomalies and suspicious behaviors.
+ - **Panel**: A central management platform that aggregates data from all Detectors and provides a unified interface for threat intelligence visualization and control.
+
+With this architecture, Burrow enables real-time analysis of logs across multiple servers, integrates diverse threat intelligence sources, and automatically identifies and blocks malicious IPs, enhancing overall security efficiency.
 
 ## 🏗️ Architecture
 
@@ -79,8 +84,8 @@ A comprehensive malicious IP threat intelligence system that monitors log files 
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/hmes98318/malicious-detector.git
-cd malicious-detector
+git clone https://github.com/hmes98318/burrow.git
+cd burrow
 ```
 
 2. **Build the system**
@@ -439,7 +444,7 @@ Statistics include:
 
 ### Project Structure
 ```
-malicious-detector/
+burrow/
 ├── cmd/                    # Main applications
 │   ├── detector/          # Detector agent
 │   └── panel/             # Panel server
